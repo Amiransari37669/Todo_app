@@ -68,8 +68,8 @@ router.post("/task/update", async (req, res) => {
 });
 router.delete("/task/delete/:id", async (req, res) => {
   await Task.deleteOne({ _id: req.params.id }).then(()=>console.log("task deleted"));
-  let result = await Task.find();
-  res.send(result);
+  let Tasks = await Task.find();
+  res.send(Tasks);
 
 })
 
