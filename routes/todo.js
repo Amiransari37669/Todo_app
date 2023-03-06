@@ -65,6 +65,12 @@ router.post("/task/update", async (req, res) => {
   let result = await Task.findById({ _id: req.body.id })
   res.send(result);
 
+});
+router.delete("/task/delete/:id", async (req, res) => {
+  await Task.deleteOne({ _id: req.params.id }).then(()=>console.log("task deleted"));
+  let result = await Task.find();
+  res.send(result);
+
 })
 
 module.exports = router;
