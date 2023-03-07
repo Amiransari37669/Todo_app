@@ -67,10 +67,17 @@ router.post("/task/update", async (req, res) => {
 
 });
 router.delete("/task/delete/:id", async (req, res) => {
-  await Task.deleteOne({ _id: req.params.id }).then(()=>console.log("task deleted"));
+  await Task.deleteOne({ _id: req.params.id }).then(() => console.log("task deleted"));
   let Tasks = await Task.find();
   res.send(Tasks);
 
-})
+});
+router.delete("/taskgroup/delete/:id", async (req, res) => {
+  await TaskGroup.deleteOne({ _id: req.params.id }).then(() => console.log("taskgroup deleted")).catch((e) => console.log(e));
+  let Taskgroups = await TaskGroup.find();
+  res.send(Taskgroups);
+
+});
+
 
 module.exports = router;
