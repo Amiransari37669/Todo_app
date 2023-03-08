@@ -46,6 +46,16 @@ router
     res.send(result)
 
   });
+router
+  .get("/get/alltask", async (req, res) => {
+    let response = await Task.find();
+    res.send(response);
+  });
+router
+  .get("/taskgroup/all", async (req, res) => {
+    let response = await TaskGroup.find();
+    res.send(response);
+  });
 
 // update taskgroup
 router.post("/taskgroup/update", async (req, res) => {
@@ -78,6 +88,16 @@ router.delete("/taskgroup/delete/:id", async (req, res) => {
   res.send(Taskgroups);
 
 });
+router.get("/tasks/today", async (req, res) => {
+  const date = new Date();
+  let day = date.getDate();
+  let month = date.getMonth() + 1;
+  let year = date.getFullYear();
+  let result = await Task.find({ created_At : {$gte:`${year}-${month}-${day}`}, });
+  res.send(result);
+  console.log(`${year}-${month}-${day}`)
+
+})
 
 
 module.exports = router;
