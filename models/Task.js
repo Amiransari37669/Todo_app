@@ -19,6 +19,10 @@ let SubtaskSchema = new Schema({
     task_status: {
         type: Number,
         default: 0
+    },
+    userId: {
+        type: String,
+        required: true
     }
 
 

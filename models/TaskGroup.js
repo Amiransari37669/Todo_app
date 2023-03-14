@@ -5,6 +5,10 @@ const TaskgroupSchema = new Schema({
     task_group: {
         type: String,
         required: true,
+    },
+    userId:{
+        type: String,
+        required: true
     }
 })
 

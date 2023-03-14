@@ -7,8 +7,7 @@ const ObjectId = type.ObjectId
 const jwt = require('jsonwebtoken');
 const jwtSecret = "nighthacks"
 const { body, validationResult } = require('express-validator');
-const fetchuser= require("../middleware/fetchuser");
-const { response } = require("express");
+const fetchuser = require("../middleware/fetchuser");
 
 
 //create user or signup
@@ -35,42 +34,43 @@ router.post("/createuser",
     const authtoken = jwt.sign(data, jwtSecret);
     res.send(authtoken);
   });
+
 //login user
 router.post("/login",// email must be an email
-body('email').isEmail(),
-body('password').isLength({min:3}), async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-  const {email,password}=req.body;
-  let user = await User.findOne({email});
-  if(user.password!=password){
-    res.status(401).json({error:"invalid credentials"});
-  }
-  let data = {
-    userId:user._id
-  }
-  let authtoken= await jwt.sign(data,jwtSecret);
-  res.send(authtoken);
+  body('email').isEmail(),
+  body('password').isLength({ min: 3 }), async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    const { email, password } = req.body;
+    let user = await User.findOne({ email });
+    if (user.password != password) {
+      res.status(401).json({ error: "invalid credentials" });
+    }
+    let data = {
+      userId: user._id
+    }
+    let authtoken = jwt.sign(data, jwtSecret);
+    res.send(authtoken);
 
-})
+  })
 
 //getuser
-router.post("/getuser", fetchuser,async (req, res) => {
-    let userId=req.user;
-    let user = await User.findOne({_id:userId}).select("-password");
-    res.send(user);
-  })
+router.post("/getuser", fetchuser, async (req, res) => {
+  let userId = req.user;
+  let user = await User.findOne({ _id: userId }).select("-password");
+  res.send(user);
+})
 
 //create taskgroup
 router
-  .post("/create/taskgroup", (req, res) => {
-    const task_group = req.body.task;
-    const newTaskGroup = new TaskGroup({ task_group });
-
+  .post("/user/create/taskgroup", fetchuser, async (req, res) => {
+    let userId = await req.user;
+    const task_group = await req.body.task;
+    const newTaskGroup = new TaskGroup({ task_group, userId });
     // save the todo
-    newTaskGroup
+    await newTaskGroup
       .save()
       .then(() => {
         console.log("Successfully added todo!");
@@ -79,8 +79,9 @@ router
     res.send(newTaskGroup);
   });
 //create tasks
-router.post("/create/task", (req, res) => {
-  const newTask = new Task({ task_id: req.body.task_id, task: req.body.task, due_date: req.body.completed_at, task_status: req.body.task_status });
+router.post("/user/create/task", fetchuser, (req, res) => {
+  let userId = req.user;
+  const newTask = new Task({ userId: userId, task_id: req.body.task_id, task: req.body.task, due_date: req.body.completed_at, task_status: req.body.task_status });
 
   newTask.save().then(() => { console.log("added successfully") }).catch((e) => { console.log(e) });
   res.send(newTask);
@@ -89,7 +90,7 @@ router.post("/create/task", (req, res) => {
 });
 //get taskgroup
 router
-  .get("/get/taskgroup/:id", async (req, res) => {
+  .get("/get/taskgroup/:id", fetchuser, async (req, res) => {
     console.log(req.params)
     let id = req.params.id;
     let result = await TaskGroup.aggregate([
@@ -109,19 +110,21 @@ router
   });
 //get task lists
 router
-  .get("/get/alltask", async (req, res) => {
-    let response = await Task.find();
+  .get("/get/alltask", fetchuser, async (req, res) => {
+    let userId=req.user;
+    let response = await Task.find({userId});
     res.send(response);
   });
 //get lists of taskgroup
 router
-  .get("/taskgroup/all", async (req, res) => {
-    let response = await TaskGroup.find();
+  .get("/taskgroup/all", fetchuser, async (req, res) => {
+    let userId = req.user;
+    let response = await TaskGroup.find({userId});
     res.send(response);
   });
 
 // update taskgroup
-router.post("/taskgroup/update", async (req, res) => {
+router.post("/taskgroup/update", fetchuser, async (req, res) => {
   await TaskGroup.findOneAndUpdate({ _id: req.body.id }, {
     $set: {
       task_group: req.body.task_group
@@ -132,7 +135,7 @@ router.post("/taskgroup/update", async (req, res) => {
 
 });
 //update tasks
-router.post("/task/update", async (req, res) => {
+router.post("/task/update", fetchuser, async (req, res) => {
   await Task.findOneAndUpdate({ _id: req.body.id }, {
     $set: { task: req.body.task, due_date: req.body.due_date, task_status: req.body.task_status }
   });
@@ -141,21 +144,21 @@ router.post("/task/update", async (req, res) => {
 
 });
 //delete tasks
-router.delete("/task/delete/:id", async (req, res) => {
+router.delete("/task/delete/:id", fetchuser, async (req, res) => {
   await Task.deleteOne({ _id: req.params.id }).then(() => console.log("task deleted"));
   let Tasks = await Task.find();
   res.send(Tasks);
 
 });
 //delete taskgroup
-router.delete("/taskgroup/delete/:id", async (req, res) => {
+router.delete("/taskgroup/delete/:id", fetchuser, async (req, res) => {
   await TaskGroup.deleteOne({ _id: req.params.id }).then(() => console.log("taskgroup deleted")).catch((e) => console.log(e));
   let Taskgroups = await TaskGroup.find();
   res.send(Taskgroups);
 
 });
 //filter today's task
-router.get("/tasks/today", async (req, res) => {
+router.get("/tasks/today", fetchuser, async (req, res) => {
   const date = new Date();
   let day = date.getDate();
   let month = date.getMonth() + 1;
